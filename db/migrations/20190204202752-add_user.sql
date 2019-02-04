@@ -11,6 +11,8 @@ CREATE TABLE public.users (
   token_expiry timestamp with time zone
 );
 
+CREATE UNIQUE INDEX uix_user_id ON public.users USING btree (id);
+
 -- +migrate Down
 
 DROP TABLE public.users CASCADE;

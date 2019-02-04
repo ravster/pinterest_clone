@@ -5,7 +5,7 @@ CREATE TABLE public.images (
   created_at timestamp with time zone NOT NULL,
   updated_at timestamp with time zone NOT NULL,
   deleted_at timestamp with time zone,
-  user_id uuid NOT NULL
+  user_id uuid NOT NULL,
   href text NOT NULL,
   shortlink text
 );
