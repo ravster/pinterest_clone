@@ -7,11 +7,13 @@ import (
 
 	"time"
 
-//	_ "github.com/jinzhu/gorm/dialects/postgres"
+	//	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/pborman/uuid"
 	"github.com/gin-gonic/gin"
 )
 
 type Image struct {
+	UserId UUID
 	Href string
 	Shortlink string
 }
@@ -22,6 +24,13 @@ type User struct {
 	Token string
 	TokenExpiry time
 }
+
+// Add Seed data?
+// Return authenticated user
+// New Image
+// Delete Image
+// Image - gen-short-url
+// Image - List by user
 
 func pong(c *gin.Context) {
 	c.JSON(200, gin.H{
