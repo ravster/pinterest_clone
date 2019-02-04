@@ -1,0 +1,24 @@
+version: '3'
+
+services:
+  pinterest_clone:
+    environment:
+      GIN_MODE: debug
+      APP_URL: http://localhost
+      APP_PORT: 3000
+      PGDATABASE: pc
+      PGHOST: db
+      PGUSER: postgres
+      PGSSLMODE: disable
+    build: .
+    ports:
+      - "3000:3000"
+    links:
+      - db
+    volumes:
+      - .:/go/src/github.com/ravster/pinterest_clone
+
+  db:
+    image: postgres:9.6.9-alpine
+    volumes:
+      - ./db/scripts:/docker-entrypoint-initdb.d

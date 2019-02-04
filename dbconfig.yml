@@ -1,0 +1,5 @@
+development:
+    dialect: postgres
+    datasource: host=${PGHOST} dbname=${PGDATABASE} sslmode=${PGSSLMODE} user=${PGUSER}
+    dir: db/migrations
+    table: migrations
