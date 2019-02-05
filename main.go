@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-	// "os"
+	"os"
 	// "strconv"
 	// "errors"
 	"time"
@@ -27,6 +27,8 @@ type User struct {
 	TokenExpiry time.Time
 }
 
+// DB_URL="postgresql://postgres:password@db:5432/pc"
+var db_url = os.Getenv("DB_URL")
 var db *sql.DB
 
 // Add Seed data?
@@ -64,8 +66,10 @@ LIMIT 1`,
 
 func saveNewImage(db *sql.DB, userID, href string) (err error) {
 	fmt.Printf("Inserting %s for %s\n", href, userID)
-	sql_query := fmt.Sprintf(`INSERT INTO images (href, user_id)
-VALUES ('href', 'userID')`)
+	sql_query := fmt.Sprintf(`INSERT INTO images (href, user_id, created_at, updated_at)
+VALUES ('%s', '%s', now(), now())`,
+		href,
+		userID)
 
 	rows, err := db.Query(sql_query)
 	if err != nil {
@@ -129,7 +133,14 @@ func pong(c *gin.Context) {
 }
 
 func main() {
+	var err error
+	db, err = sql.Open("postgres", db_url)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	r := gin.Default()
 	r.GET("/ping", pong)
+	r.POST("/images", createNewImage)
 	r.Run() // listen and serve on 0.0.0.0:8080
 }
