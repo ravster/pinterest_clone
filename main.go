@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 	// "strconv"
-	// "errors"
+	"errors"
 	"database/sql"
 
 	_ "github.com/lib/pq"
@@ -43,6 +43,9 @@ LIMIT 1`,
 			log.Print(err)
 			return "", err
 		}
+	}
+	if userid == "" {
+		return "", errors.New("Token not found")
 	}
 
 	return userid, nil
