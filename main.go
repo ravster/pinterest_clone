@@ -10,7 +10,7 @@ import (
 	"database/sql"
 
 	_ "github.com/lib/pq"
-	uuid "github.com/pborman/uuid"
+	"github.com/pborman/uuid"
 	"github.com/gin-gonic/gin"
 )
 
@@ -33,8 +33,6 @@ var db *sql.DB
 
 // Add Seed data?
 // Return authenticated user
-// New Image
-// Delete Image
 // Image - gen-short-url
 // Image - List by user
 
@@ -194,7 +192,9 @@ func main() {
 
 	r := gin.Default()
 	r.GET("/ping", pong)
+	// curl -H "Authorization: foo" -XPOST -d '{"href": "http://foo.com"}' localhost:8080/images
 	r.POST("/images", createNewImage)
+	// curl -H "Authorization: foo" -XDELETE localhost:8080/images/621179b9-a872-4452-aa01-415507ff9b44
 	r.DELETE("/images/:id", deleteImage)
 	r.Run() // listen and serve on 0.0.0.0:8080
 }
