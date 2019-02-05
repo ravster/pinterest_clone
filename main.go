@@ -45,6 +45,7 @@ FROM users
 WHERE token = '%s'
 LIMIT 1`,
 		token)
+	// TODO: Check the token has not expired.
 
 	rows, err := db.Query(query)
 	if err != nil {
