@@ -127,6 +127,28 @@ func createNewImage(c *gin.Context) {
 	c.JSON(201, gin.H{})
 }
 
+func deleteImage(c *gin.Context) {
+	// Get token from context
+	token := c.GetHeader("Authorization")
+	if token == "" {
+		c.JSON(401, gin.H{
+			"error": "Missing Authorization token",
+		})
+		return
+	}
+	// Get user-id from token
+	userId, err := getUserIdFromToken(db, token)
+	if err != nil {
+		c.JSON(401, gin.H{
+			"error": "Invalid token",
+		})
+		return
+	}
+
+	// get id of image
+	// mark image deleted in DB
+}
+
 func pong(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "pong",
