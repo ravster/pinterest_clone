@@ -81,6 +81,24 @@ VALUES ('%s', '%s', now(), now())`,
 	return nil
 }
 
+func markImageDeleted(db *sql.DB, userId, imageId string) error {
+	fmt.Printf("Deleting image %s\n", imageId)
+	sql_query := fmt.Sprintf(`UPDATE images set deleted_at = now()
+WHERE user_id = '%s' AND id = '%s'`,
+		userId,
+		imageId,
+	)
+
+	rows, err := db.Query(sql_query)
+	if err != nil {
+		log.Print(err)
+		return err
+	}
+	rows.Close()
+	return nil
+}
+
+
 func createNewImage(c *gin.Context) {
 	// Get token from context
 	token := c.GetHeader("Authorization")
@@ -146,7 +164,19 @@ func deleteImage(c *gin.Context) {
 	}
 
 	// get id of image
+	imageId := c.Param("id")
+
 	// mark image deleted in DB
+	err = markImageDeleted(db, userId, imageId)
+	if err != nil {
+		c.JSON(422, gin.H{
+			"error": "Couldn't delete image",
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{})
+
 }
 
 func pong(c *gin.Context) {
@@ -165,5 +195,6 @@ func main() {
 	r := gin.Default()
 	r.GET("/ping", pong)
 	r.POST("/images", createNewImage)
+	r.DELETE("/images/:id", deleteImage)
 	r.Run() // listen and serve on 0.0.0.0:8080
 }
