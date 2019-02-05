@@ -6,26 +6,11 @@ import (
 	"os"
 	// "strconv"
 	// "errors"
-	"time"
 	"database/sql"
 
 	_ "github.com/lib/pq"
-	"github.com/pborman/uuid"
 	"github.com/gin-gonic/gin"
 )
-
-type Image struct {
-	UserId uuid.UUID
-	Href string
-	Shortlink string
-}
-
-type User struct {
-	Email string
-	Username string
-	Token string
-	TokenExpiry time.Time
-}
 
 // DB_URL="postgresql://postgres:password@db:5432/pc"
 var db_url = os.Getenv("DB_URL")
