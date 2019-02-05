@@ -36,7 +36,7 @@ var db *sql.DB
 // Image - gen-short-url
 // Image - List by user
 
-func getUserIdFromToken(db *sql.DB, token string) (string, err) {
+func getUserIdFromToken(db *sql.DB, token string) (string, error) {
 	fmt.Printf("Attempting to get user-id for token %s\n", token)
 	query := fmt.Sprintf(`SELECT id
 FROM users
@@ -47,18 +47,19 @@ LIMIT 1`,
 	rows, err := db.Query(query)
 	if err != nil {
 		log.Print(err)
-		return nil, err
+		return "", err
 	}
 	defer rows.Close()
+
+	var userid string
 	for rows.Next() {
-		var userid string
 		if err := rows.Scan(&userid); err != nil {
 			log.Print(err)
-			return nil, err
+			return "", err
 		}
-
-		return userid, nil
 	}
+
+	return userid, nil
 }
 
 func saveNewImage(db *sql.DB, userID, href string) (err error) {
@@ -85,17 +86,32 @@ func createNewImage(c *gin.Context) {
 		return
 	}
 	// Get user-id from token
-	userId, err := getUserIdFromToken(token)
+	userId, err := getUserIdFromToken(db, token)
 	if err != nil {
 		c.JSON(401, gin.H{
 			"error": "Invalid token",
 		})
 		return
 	}
+
 	// Get href string from req-body
+	var reqBody map[string]interface{}
+	if err := c.BindJSON(&reqBody); err != nil {
+		c.JSON(400, gin.H{
+			"error": "Can't parse request body",
+		})
+		return
+	}
+	href, ok := reqBody["href"].(string)
+	if ok == false {
+		c.JSON(400, gin.H{
+			"error": "Can't parse 'href' from request body",
+		})
+		return
+	}
 
 	// Save into DB
-	err := saveNewImage
+	err = saveNewImage(db, userId, href)
 	if err != nil {
 		c.JSON(422, gin.H{
 			"error": "Couldn't save image to DB",
