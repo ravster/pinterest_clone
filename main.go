@@ -9,7 +9,6 @@ import (
 // Add Seed data?
 // Return authenticated user
 // Image - gen-short-url
-// Image - List by user
 
 func getUserIdFromToken(token string) (string, string) {
 	if token == "" {
@@ -112,15 +111,33 @@ func getMyImages(c *gin.Context) {
 	c.JSON(200, hrefs)
 }
 
+func getUserImages(c *gin.Context) {
+	userId := c.Param("userId")
+
+	hrefs, err := db.ListImagesForUser(userId)
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": "Couldn't get the list of images",
+		})
+		return
+	}
+
+	c.JSON(200, hrefs)
+}
+
 func main() {
 	db.Connect()
 
 	r := gin.Default()
-	r.GET("/ping", pong)
+
 	// curl -H "Authorization: foo" -XPOST -d '{"href": "http://foo.com"}' localhost:8080/images
 	r.POST("/images", createNewImage)
 	// curl -H "Authorization: foo" -XDELETE localhost:8080/images/621179b9-a872-4452-aa01-415507ff9b44
 	r.DELETE("/images/:id", deleteImage)
 	r.GET("/images", getMyImages) // curl -H "Authorization: foo" -XGET localhost:8080/images
+
+	r.GET("/ping", pong)
+	r.GET("/images/:userId", getUserImages) // curl -XGET localhost:8080/images/0208be54-e388-4ed1-b435-c2b063cce9c1
+
 	r.Run() // listen and serve on 0.0.0.0:8080
 }
