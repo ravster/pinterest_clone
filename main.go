@@ -96,6 +96,14 @@ func pong(c *gin.Context) {
 	})
 }
 
+func getMyImages(c *gin.Context) {
+	// get token
+	// get userid
+	// get image-hrefs
+	// convert to JSON
+	// HTTP response
+}
+
 func main() {
 	db.Connect()
 
@@ -105,5 +113,6 @@ func main() {
 	r.POST("/images", createNewImage)
 	// curl -H "Authorization: foo" -XDELETE localhost:8080/images/621179b9-a872-4452-aa01-415507ff9b44
 	r.DELETE("/images/:id", deleteImage)
+	r.GET("/images", getMyImages)
 	r.Run() // listen and serve on 0.0.0.0:8080
 }
