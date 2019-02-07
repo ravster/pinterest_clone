@@ -11,20 +11,25 @@ import (
 // Image - gen-short-url
 // Image - List by user
 
-func createNewImage(c *gin.Context) {
-	// Get token from context
-	token := c.GetHeader("Authorization")
+func getUserIdFromToken(token string) (string, string) {
 	if token == "" {
-		c.JSON(401, gin.H{
-			"error": "Missing Authorization token",
-		})
-		return
+		return "", "Missing Authorization token"
 	}
-	// Get user-id from token
+
 	userId, err := db.GetUserIdFromToken(token)
 	if err != nil {
+		return "", "Invalid token"
+	}
+
+	return userId, ""
+}
+
+func createNewImage(c *gin.Context) {
+	token := c.GetHeader("Authorization")
+	userId, errstring := getUserIdFromToken(token)
+	if errstring != "" {
 		c.JSON(401, gin.H{
-			"error": "Invalid token",
+			"error": errstring,
 		})
 		return
 	}
@@ -45,8 +50,7 @@ func createNewImage(c *gin.Context) {
 		return
 	}
 
-	err = db.SaveNewImage(userId, href)
-	if err != nil {
+	if err := db.SaveNewImage(userId, href); err != nil {
 		c.JSON(422, gin.H{
 			"error": "Couldn't save image to DB",
 		})
@@ -57,19 +61,11 @@ func createNewImage(c *gin.Context) {
 }
 
 func deleteImage(c *gin.Context) {
-	// Get token from context
 	token := c.GetHeader("Authorization")
-	if token == "" {
+	userId, errstring := getUserIdFromToken(token)
+	if errstring != "" {
 		c.JSON(401, gin.H{
-			"error": "Missing Authorization token",
-		})
-		return
-	}
-	// Get user-id from token
-	userId, err := db.GetUserIdFromToken(token)
-	if err != nil {
-		c.JSON(401, gin.H{
-			"error": "Invalid token",
+			"error": errstring,
 		})
 		return
 	}
@@ -78,8 +74,7 @@ func deleteImage(c *gin.Context) {
 	imageId := c.Param("id")
 
 	// mark image deleted in DB
-	err = db.MarkImageDeleted(userId, imageId)
-	if err != nil {
+	if err := db.MarkImageDeleted(userId, imageId);  err != nil {
 		c.JSON(422, gin.H{
 			"error": "Couldn't delete image",
 		})
@@ -96,6 +91,27 @@ func pong(c *gin.Context) {
 	})
 }
 
+func getMyImages(c *gin.Context) {
+	token := c.GetHeader("Authorization")
+	userId, errstring := getUserIdFromToken(token)
+	if errstring != "" {
+		c.JSON(401, gin.H{
+			"error": errstring,
+		})
+		return
+	}
+
+	hrefs, err := db.ListImagesForUser(userId)
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": "Couldn't get the list of images",
+		})
+		return
+	}
+
+	c.JSON(200, hrefs)
+}
+
 func main() {
 	db.Connect()
 
@@ -105,5 +121,6 @@ func main() {
 	r.POST("/images", createNewImage)
 	// curl -H "Authorization: foo" -XDELETE localhost:8080/images/621179b9-a872-4452-aa01-415507ff9b44
 	r.DELETE("/images/:id", deleteImage)
+	r.GET("/images", getMyImages) // curl -H "Authorization: foo" -XGET localhost:8080/images
 	r.Run() // listen and serve on 0.0.0.0:8080
 }
