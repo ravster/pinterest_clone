@@ -1,6 +1,12 @@
 package main
 
 import (
+	"encoding/json"
+	"net/http"
+	"bytes"
+	"strings"
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 
 	db "github.com/ravster/pinterest_clone/db"
@@ -125,6 +131,58 @@ func getUserImages(c *gin.Context) {
 	c.JSON(200, hrefs)
 }
 
+type GHResponse struct {
+	AccessToken string `json:access_token`
+}
+
+func loginFromGitHub(c *gin.Context) {
+	accessCode, ok := c.GetQuery("code")
+	if ok == false {
+		c.JSON(422, gin.H{
+			"error": "No code found from GitHub callback",
+		})
+		return
+	}
+
+	client := &http.Client{}
+	clientId := "0028f2b81b2b5aa770b3"
+	clientSecret := "1db7aee5c6488d7a0b8261fb7ecca95537c8d6cb"
+	bodyString := fmt.Sprintf("code=%s&client_id=%s&client_secret=%s", accessCode, clientId, clientSecret)
+	reqBody := strings.NewReader(bodyString)
+	req, _ := http.NewRequest("POST", "https://github.com/login/oauth/access_token", reqBody)
+	req.Header.Add("Accept", "application/json")
+
+	resp, _ := client.Do(req)
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	newStr := buf.String()
+	fmt.Printf("z1 %v \n", newStr)
+
+	var respFromGH map[string]string
+
+	err := json.Unmarshal([]byte(newStr), &respFromGH)
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": "Couldn't parse JSON from Github",
+		})
+		return
+	}
+	if respFromGH["access_token"] == "" {
+		fmt.Printf("%+v \n", respFromGH)
+		c.JSON(400, gin.H{
+			"error": "Couldn't get an access-token from GitHub",
+		})
+		return
+	}
+
+	// At this point, we've confirmed that the github authentication passed.  Now, how do we ensure that we log in as the right user?
+	// Just set the user's UUID in a subdir of the path of the callback URL registered with GH.
+	// https://github.com/login/oauth/authorize?scope=user:email&client_id=0028f2b81b2b5aa770b3&redirect_uri=http://localhost:8080/success_GH_authn_callback/ffjjf
+
+	c.String(200, newStr)
+}
+
 func main() {
 	db.Connect()
 
@@ -138,6 +196,10 @@ func main() {
 
 	r.GET("/ping", pong)
 	r.GET("/images/:userId", getUserImages) // curl -XGET localhost:8080/images/0208be54-e388-4ed1-b435-c2b063cce9c1
+	r.GET("/success_GH_authn_callback", loginFromGitHub)
+
+	// On success, browser is redirected to:
+	// http://localhost:8080/success_GH_authn_callback?code=b0f0f6b5096a0f535ac5
 
 	r.Run() // listen and serve on 0.0.0.0:8080
 }
