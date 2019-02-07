@@ -89,3 +89,33 @@ WHERE user_id = '%s' AND id = '%s'`,
 	rows.Close()
 	return nil
 }
+
+func ListImagesForUser(userId string) ([]string, error) {
+	var hrefs []string
+
+	fmt.Printf("Getting hrefs of all undeleted images for user-id %s\n", userId)
+	query := fmt.Sprintf(`SELECT href
+FROM images
+WHERE user_id = '%s' AND deleted_at IS NULL
+ORDER BY created_at DESC`,
+		userId)
+
+	rows, err := DB.Query(query)
+	if err != nil {
+		log.Print(err)
+		return hrefs, err
+	}
+	defer rows.Close()
+
+	var href string
+	for rows.Next() {
+		if err := rows.Scan(&href); err != nil {
+			log.Print(err)
+			return hrefs, err
+		}
+
+		hrefs = append(hrefs, href)
+	}
+
+	return hrefs, nil
+}

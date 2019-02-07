@@ -92,11 +92,24 @@ func pong(c *gin.Context) {
 }
 
 func getMyImages(c *gin.Context) {
-	// get token
-	// get userid
-	// get image-hrefs
-	// convert to JSON
-	// HTTP response
+	token := c.GetHeader("Authorization")
+	userId, errstring := getUserIdFromToken(token)
+	if errstring != "" {
+		c.JSON(401, gin.H{
+			"error": errstring,
+		})
+		return
+	}
+
+	hrefs, err := db.ListImagesForUser(userId)
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": "Couldn't get the list of images",
+		})
+		return
+	}
+
+	c.JSON(200, hrefs)
 }
 
 func main() {
@@ -108,6 +121,6 @@ func main() {
 	r.POST("/images", createNewImage)
 	// curl -H "Authorization: foo" -XDELETE localhost:8080/images/621179b9-a872-4452-aa01-415507ff9b44
 	r.DELETE("/images/:id", deleteImage)
-	r.GET("/images", getMyImages)
+	r.GET("/images", getMyImages) // curl -H "Authorization: foo" -XGET localhost:8080/images
 	r.Run() // listen and serve on 0.0.0.0:8080
 }
