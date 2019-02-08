@@ -6,12 +6,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"log"
+	"os"
 )
 
 func GetAccessTokenFromGithubLogin(code string) (bool, string) {
 	client := &http.Client{}
-	clientId := "0028f2b81b2b5aa770b3"
-	clientSecret := "1db7aee5c6488d7a0b8261fb7ecca95537c8d6cb"
+	clientId, ok := os.LookupEnv("GH_CLIENT_ID")
+	if ok == false {
+		log.Fatalln("No GH_CLIENT_ID found.  Failing.")
+	}
+	clientSecret, ok := os.LookupEnv("GH_CLIENT_SECRET")
+	if ok == false {
+		log.Fatalln("No GH_CLIENT_SECRET found.  Failing.")
+	}
 
 	bodyString := fmt.Sprintf("code=%s&client_id=%s&client_secret=%s", code, clientId, clientSecret)
 	reqBody := strings.NewReader(bodyString)

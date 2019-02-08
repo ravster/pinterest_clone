@@ -161,8 +161,6 @@ func loginFromGitHub(c *gin.Context) {
 		"access_token": token,
 	})
 
-	// At this point, we've confirmed that the github authentication passed.  Now, how do we ensure that we log in as the right user?
-	// Just set the user's UUID in a subdir of the path of the callback URL registered with GH.
 	// https://github.com/login/oauth/authorize?scope=user:email&client_id=0028f2b81b2b5aa770b3&redirect_uri=http://localhost:8080/success_GH_authn_callback/0208be54-e388-4ed1-b435-c2b063cce9c1
 }
 
