@@ -119,3 +119,29 @@ ORDER BY created_at DESC`,
 
 	return hrefs, nil
 }
+
+func CreateToken(userId string) (string, error) {
+	var token string
+	fmt.Printf("Creating token for user-id %s\n", userId)
+	query := fmt.Sprintf(`UPDATE users
+set token = uuid_generate_v4(), token_expiry = now() + interval '1 day'
+WHERE id = '%s'
+RETURNING token`,
+		userId)
+
+	rows, err := DB.Query(query)
+	defer rows.Close()
+	if err != nil {
+		log.Print(err)
+		return token, err
+	}
+
+	for rows.Next() {
+		if err := rows.Scan(&token); err != nil {
+			log.Print(err)
+			return token, err
+		}
+	}
+
+	return token, nil
+}

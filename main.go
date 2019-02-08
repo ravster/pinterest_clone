@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	db "github.com/ravster/pinterest_clone/db"
+	github "github.com/ravster/pinterest_clone/github"
 )
 
 // Add Seed data?
@@ -125,6 +126,44 @@ func getUserImages(c *gin.Context) {
 	c.JSON(200, hrefs)
 }
 
+type GHResponse struct {
+	AccessToken string `json:access_token`
+}
+
+func loginFromGitHub(c *gin.Context) {
+	accessCode, ok := c.GetQuery("code")
+	if ok == false {
+		c.JSON(422, gin.H{
+			"error": "No code found from GitHub callback",
+		})
+		return
+	}
+
+	ok, errString := github.GetAccessTokenFromGithubLogin(accessCode)
+	if errString != "" {
+		c.JSON(500, gin.H{
+			"error": errString,
+		})
+		return
+	}
+
+	userId := c.Param("userId")
+
+	token, err := db.CreateToken(userId)
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": "Couldn't create token for the application",
+		})
+		return
+	}
+
+	c.JSON(201, gin.H{
+		"access_token": token,
+	})
+
+	// https://github.com/login/oauth/authorize?scope=user:email&client_id=0028f2b81b2b5aa770b3&redirect_uri=http://localhost:8080/success_GH_authn_callback/0208be54-e388-4ed1-b435-c2b063cce9c1
+}
+
 func main() {
 	db.Connect()
 
@@ -138,6 +177,9 @@ func main() {
 
 	r.GET("/ping", pong)
 	r.GET("/images/:userId", getUserImages) // curl -XGET localhost:8080/images/0208be54-e388-4ed1-b435-c2b063cce9c1
+	r.GET("/success_GH_authn_callback/:userId", loginFromGitHub)
+
+	// http://localhost:8080/success_GH_authn_callback?code=708cd6929b3c7a168f7b
 
 	r.Run() // listen and serve on 0.0.0.0:8080
 }
