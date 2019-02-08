@@ -10,9 +10,12 @@ services:
       PGHOST: db
       PGUSER: postgres
       PGSSLMODE: disable
+	  # GH_CLIENT_ID: foo
+	  # GH_CLIENT_SECRET: bar
     build: .
+    command: tail -f /dev/null
     ports:
-      - "3000:3000"
+      - "8080:8080"
     links:
       - db
     volumes:

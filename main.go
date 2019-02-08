@@ -7,10 +7,6 @@ import (
 	github "github.com/ravster/pinterest_clone/github"
 )
 
-// Add Seed data?
-// Return authenticated user
-// Image - gen-short-url
-
 type userGetter func (string) (string, error)
 
 func getUserIdFromToken(userGetterFunc userGetter, token string) (string, string) {
@@ -87,12 +83,6 @@ func deleteImage(c *gin.Context) {
 
 }
 
-func pong(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "pong",
-	})
-}
-
 func getMyImages(c *gin.Context) {
 	token := c.GetHeader("Authorization")
 	userId, errstring := getUserIdFromToken(db.GetUserIdFromToken, token)
@@ -162,8 +152,6 @@ func loginFromGitHub(c *gin.Context) {
 	c.JSON(201, gin.H{
 		"access_token": token,
 	})
-
-	// https://github.com/login/oauth/authorize?scope=user:email&client_id=0028f2b81b2b5aa770b3&redirect_uri=http://localhost:8080/success_GH_authn_callback/0208be54-e388-4ed1-b435-c2b063cce9c1
 }
 
 func main() {
@@ -171,17 +159,12 @@ func main() {
 
 	r := gin.Default()
 
-	// curl -H "Authorization: foo" -XPOST -d '{"href": "http://foo.com"}' localhost:8080/images
 	r.POST("/images", createNewImage)
-	// curl -H "Authorization: foo" -XDELETE localhost:8080/images/621179b9-a872-4452-aa01-415507ff9b44
 	r.DELETE("/images/:id", deleteImage)
-	r.GET("/images", getMyImages) // curl -H "Authorization: foo" -XGET localhost:8080/images
+	r.GET("/images", getMyImages)
 
-	r.GET("/ping", pong)
-	r.GET("/images/:userId", getUserImages) // curl -XGET localhost:8080/images/0208be54-e388-4ed1-b435-c2b063cce9c1
+	r.GET("/images/:userId", getUserImages)
 	r.GET("/success_GH_authn_callback/:userId", loginFromGitHub)
-
-	// http://localhost:8080/success_GH_authn_callback?code=708cd6929b3c7a168f7b
 
 	r.Run() // listen and serve on 0.0.0.0:8080
 }
