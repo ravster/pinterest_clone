@@ -11,12 +11,14 @@ import (
 // Return authenticated user
 // Image - gen-short-url
 
-func getUserIdFromToken(token string) (string, string) {
+type userGetter func (string) (string, error)
+
+func getUserIdFromToken(userGetterFunc userGetter, token string) (string, string) {
 	if token == "" {
 		return "", "Missing Authorization token"
 	}
 
-	userId, err := db.GetUserIdFromToken(token)
+	userId, err := userGetterFunc(token)
 	if err != nil {
 		return "", "Invalid token"
 	}
@@ -26,7 +28,7 @@ func getUserIdFromToken(token string) (string, string) {
 
 func createNewImage(c *gin.Context) {
 	token := c.GetHeader("Authorization")
-	userId, errstring := getUserIdFromToken(token)
+	userId, errstring := getUserIdFromToken(db.GetUserIdFromToken, token)
 	if errstring != "" {
 		c.JSON(401, gin.H{
 			"error": errstring,
@@ -62,7 +64,7 @@ func createNewImage(c *gin.Context) {
 
 func deleteImage(c *gin.Context) {
 	token := c.GetHeader("Authorization")
-	userId, errstring := getUserIdFromToken(token)
+	userId, errstring := getUserIdFromToken(db.GetUserIdFromToken, token)
 	if errstring != "" {
 		c.JSON(401, gin.H{
 			"error": errstring,
@@ -93,7 +95,7 @@ func pong(c *gin.Context) {
 
 func getMyImages(c *gin.Context) {
 	token := c.GetHeader("Authorization")
-	userId, errstring := getUserIdFromToken(token)
+	userId, errstring := getUserIdFromToken(db.GetUserIdFromToken, token)
 	if errstring != "" {
 		c.JSON(401, gin.H{
 			"error": errstring,
